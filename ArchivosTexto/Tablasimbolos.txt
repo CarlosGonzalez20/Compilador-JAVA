@@ -1,0 +1,5 @@
+Tabla de Símbolos:
+ID         Token                          Tipo/Clasificación  
+---------- ------------------------------ ----------------------
+id2        int                            Palabra Clave       
+id3        resultado;                     Otro                

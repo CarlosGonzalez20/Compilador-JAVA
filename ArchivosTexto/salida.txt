@@ -1,0 +1,12 @@
+[Operador]: =
+[Palabra Clave]: int
+[Número]: 0
+[Simbolo]: ;
+[Identificador]: TIPO hola
+
+Resumen:
+Operador: 1
+Palabra Clave: 1
+Número: 1
+Simbolo: 1
+Identificador: 2
