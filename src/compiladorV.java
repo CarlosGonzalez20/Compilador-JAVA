@@ -16,9 +16,9 @@ import java.util.TreeMap;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JTextArea;
 
 
 /*
@@ -440,6 +440,46 @@ private int contadorIds = 0;
         return expresiones;
     }
     
+    private TreeMap<String, TreeMap<String, String>> construirArbolSintactico(String texto) {
+        TreeMap<String, TreeMap<String, String>> arbolesSintacticos = new TreeMap<>();
+
+        StringTokenizer tokenizer = new StringTokenizer(texto, "\n");
+
+        String nombreArbolActual = null;
+        TreeMap<String, String> arbolActual = null;
+
+        while (tokenizer.hasMoreTokens()) {
+            String linea = tokenizer.nextToken().trim();
+
+            // Ignorar líneas en blanco o comentarios
+            if (linea.isEmpty() || linea.startsWith("//")) {
+                continue;
+            }
+
+            // Detectar si la línea marca el inicio de un nuevo árbol sintáctico
+            if (nombreArbolActual == null || linea.startsWith("?")) {
+                nombreArbolActual = "Arbol_" + (arbolesSintacticos.size() + 1); // Nombre del nuevo árbol sintáctico
+                arbolActual = new TreeMap<>();
+                arbolesSintacticos.put(nombreArbolActual, arbolActual);
+            }
+
+            // Detectar si la línea marca el final del árbol sintáctico actual
+            if (linea.endsWith("$")) {
+                nombreArbolActual = null;
+                arbolActual = null;
+                continue; // Pasar a la siguiente línea sin procesarla como parte del árbol sintáctico
+            }
+
+            // Si estamos dentro de un árbol sintáctico, agregar la línea como un nodo
+            if (arbolActual != null) {
+                // Agregar la línea como un nodo al árbol sintáctico actual
+                arbolActual.put(linea, null);
+            }
+        }
+
+        return arbolesSintacticos;
+    }
+    
     private void analizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_analizarActionPerformed
         String texto = ingresoTexto.getText();
         salida.setText("");
@@ -507,6 +547,9 @@ private int contadorIds = 0;
             }
         }
 
+        // Construir el árbol sintáctico
+        TreeMap<String, TreeMap<String, String>> arbolSintactico = construirArbolSintactico(texto);
+
         // Actualizar el mapa de frecuencia con los tokens únicos
         for (Set<String> tokens : tokensPorTipo.values()) {
             for (String token : tokens) {
@@ -573,9 +616,29 @@ private int contadorIds = 0;
         guardarSalidaEnArchivoTS(salida.toString());
     }//GEN-LAST:event_tSimbolosActionPerformed
 
+    private void imprimirArboles(TreeMap<String, TreeMap<String, String>> arboles, JTextArea salida) {
+        for (Map.Entry<String, TreeMap<String, String>> entry : arboles.entrySet()) {
+            salida.append("Árbol: " + entry.getKey() + "\n");
+            imprimirArbol(entry.getValue(), salida, arboles, 1);
+        }
+    }
+
+    private void imprimirArbol(TreeMap<String, String> arbol, JTextArea salida, TreeMap<String, TreeMap<String, String>> arboles, int nivel) {
+        for (Map.Entry<String, String> entry : arbol.entrySet()) {
+            String nodo = entry.getKey();
+            String contenido = entry.getValue();
+            salida.append("\t".repeat(nivel) + "- " + nodo + ": " + contenido + "\n");
+            // Verificar si el contenido es otro árbol
+            if (contenido != null && arboles.containsKey(contenido)) {
+                imprimirArbol(arboles.get(contenido), salida, arboles, nivel + 1);
+            }
+        }
+    }
+
     private void mostrarArbolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mostrarArbolActionPerformed
         // Obtiene el texto del área de entrada
-        
+        salida.setText("");
+        imprimirArboles(arboles, salida);
     }//GEN-LAST:event_mostrarArbolActionPerformed
 
     private void procesarInstruccionesTipo(String instrucciones) {
