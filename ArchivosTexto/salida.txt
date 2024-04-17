@@ -1,12 +1,12 @@
 [Operador]: =
-[Palabra Clave]: String
-[Número]: 0
+[Palabra Clave]: int
+[Número]: 0 9
 [Simbolo]: ;
-[Identificador]: hola
+[Identificador]: hola adios
 
 Resumen:
 Operador: 1
 Palabra Clave: 1
-Número: 1
+Número: 2
 Simbolo: 1
-Identificador: 1
+Identificador: 2

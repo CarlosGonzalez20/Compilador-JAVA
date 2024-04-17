@@ -35,6 +35,45 @@ private Map<String, Integer> frecuenciaClasificaciones = new HashMap<>();
 private TreeMap<String, String> tablaDeSimbolos = new TreeMap<>(); // Crea un arbol para la tabla de simbolos
 private Map<String, String> idToToken = new HashMap<>(); // Mapa para mapear IDs a tokens correspondientes
 private int contadorIds = 0;
+private TreeMap<String, TreeMap<String, String>> construirArbolSintactico(String texto) {
+    TreeMap<String, TreeMap<String, String>> arbolesSintacticos = new TreeMap<>();
+
+    StringTokenizer tokenizer = new StringTokenizer(texto, "\n");
+
+    String nombreArbolActual = null;
+    TreeMap<String, String> arbolActual = null;
+
+    while (tokenizer.hasMoreTokens()) {
+        String linea = tokenizer.nextToken().trim();
+
+        // Ignorar líneas en blanco o comentarios
+        if (linea.isEmpty() || linea.startsWith("//")) {
+            continue;
+        }
+
+        // Detectar si la línea marca el inicio de un nuevo árbol sintáctico
+        if (nombreArbolActual == null || linea.startsWith("?")) {
+            nombreArbolActual = "Arbol_" + (arbolesSintacticos.size() + 1); // Nombre del nuevo árbol sintáctico
+            arbolActual = new TreeMap<>();
+            arbolesSintacticos.put(nombreArbolActual, arbolActual);
+        }
+
+        // Detectar si la línea marca el final del árbol sintáctico actual
+        if (linea.endsWith("$")) {
+            nombreArbolActual = null;
+            arbolActual = null;
+            continue; // Pasar a la siguiente línea sin procesarla como parte del árbol sintáctico
+        }
+
+        // Si estamos dentro de un árbol sintáctico, agregar la línea como un nodo
+        if (arbolActual != null) {
+            // Agregar la línea como un nodo al árbol sintáctico actual
+            arbolActual.put(linea, null);
+        }
+    }
+
+    return arbolesSintacticos;
+}
 
     /**
      * Creates new form compiladorV
@@ -440,46 +479,6 @@ private int contadorIds = 0;
         return expresiones;
     }
     
-    private TreeMap<String, TreeMap<String, String>> construirArbolSintactico(String texto) {
-        TreeMap<String, TreeMap<String, String>> arbolesSintacticos = new TreeMap<>();
-
-        StringTokenizer tokenizer = new StringTokenizer(texto, "\n");
-
-        String nombreArbolActual = null;
-        TreeMap<String, String> arbolActual = null;
-
-        while (tokenizer.hasMoreTokens()) {
-            String linea = tokenizer.nextToken().trim();
-
-            // Ignorar líneas en blanco o comentarios
-            if (linea.isEmpty() || linea.startsWith("//")) {
-                continue;
-            }
-
-            // Detectar si la línea marca el inicio de un nuevo árbol sintáctico
-            if (nombreArbolActual == null || linea.startsWith("?")) {
-                nombreArbolActual = "Arbol_" + (arbolesSintacticos.size() + 1); // Nombre del nuevo árbol sintáctico
-                arbolActual = new TreeMap<>();
-                arbolesSintacticos.put(nombreArbolActual, arbolActual);
-            }
-
-            // Detectar si la línea marca el final del árbol sintáctico actual
-            if (linea.endsWith("$")) {
-                nombreArbolActual = null;
-                arbolActual = null;
-                continue; // Pasar a la siguiente línea sin procesarla como parte del árbol sintáctico
-            }
-
-            // Si estamos dentro de un árbol sintáctico, agregar la línea como un nodo
-            if (arbolActual != null) {
-                // Agregar la línea como un nodo al árbol sintáctico actual
-                arbolActual.put(linea, null);
-            }
-        }
-
-        return arbolesSintacticos;
-    }
-    
     private void analizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_analizarActionPerformed
         String texto = ingresoTexto.getText();
         salida.setText("");
@@ -616,29 +615,20 @@ private int contadorIds = 0;
         guardarSalidaEnArchivoTS(salida.toString());
     }//GEN-LAST:event_tSimbolosActionPerformed
 
-    private void imprimirArboles(TreeMap<String, TreeMap<String, String>> arboles, JTextArea salida) {
-        for (Map.Entry<String, TreeMap<String, String>> entry : arboles.entrySet()) {
-            salida.append("Árbol: " + entry.getKey() + "\n");
-            imprimirArbol(entry.getValue(), salida, arboles, 1);
-        }
-    }
+    private void mostrarArbolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mostrarArbolActionPerformed
+String texto = ingresoTexto.getText();
+        salida.setText("");
 
-    private void imprimirArbol(TreeMap<String, String> arbol, JTextArea salida, TreeMap<String, TreeMap<String, String>> arboles, int nivel) {
-        for (Map.Entry<String, String> entry : arbol.entrySet()) {
-            String nodo = entry.getKey();
-            String contenido = entry.getValue();
-            salida.append("\t".repeat(nivel) + "- " + nodo + ": " + contenido + "\n");
-            // Verificar si el contenido es otro árbol
-            if (contenido != null && arboles.containsKey(contenido)) {
-                imprimirArbol(arboles.get(contenido), salida, arboles, nivel + 1);
+        // Construir el árbol sintáctico
+        TreeMap<String, TreeMap<String, String>> arbolSintactico = construirArbolSintactico(texto);
+
+        // Mostrar los árboles sintácticos en la salida
+        for (Map.Entry<String, TreeMap<String, String>> entry : arbolSintactico.entrySet()) {
+            salida.append("Árbol: " + entry.getKey() + "\n");
+            for (String nodo : entry.getValue().keySet()) {
+                salida.append("\t" + nodo + "\n");
             }
         }
-    }
-
-    private void mostrarArbolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mostrarArbolActionPerformed
-        // Obtiene el texto del área de entrada
-        salida.setText("");
-        imprimirArboles(arboles, salida);
     }//GEN-LAST:event_mostrarArbolActionPerformed
 
     private void procesarInstruccionesTipo(String instrucciones) {
