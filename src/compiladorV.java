@@ -16,6 +16,7 @@ import java.util.TreeMap;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JTextArea;
@@ -331,81 +332,112 @@ private TreeMap<String, TreeMap<String, String>> construirArbolSintactico(String
                esNumero(token) ? "Número" :
                "Otro";
     }
+
+private boolean verificarSintaxisLinea(String linea, int numeroLinea) {
+    if (linea.trim().startsWith("//")) {
+        return true; // La línea es un comentario y no necesita punto y coma
+    }
+
+    // Verificar si la línea contiene una estructura de control que debería estar seguida por una llave de apertura
+    if (linea.matches("\\s*(if|for|while|else)\\s*\\(.*\\)\\s*") && !linea.trim().endsWith("{")) {
+        salida.append("Error: Falta llave de apertura '{' después de la estructura de control en la línea " + numeroLinea + "\n");
+        return false;
+    }
     
-    private boolean verificarSintaxisLinea(String linea, int numeroLinea) {
-        if (linea.trim().startsWith("//")) {
-            return true; // La línea es un comentario y no necesita punto y coma
-        }
-
-        // Verificar si falta un punto y coma al final de la línea
-        if (!linea.trim().endsWith(";")) {
-            salida.append("Error: Falta punto y coma al final de la línea " + numeroLinea + "\n");
-            return false;
-        }
-
-        // Verificar si hay paréntesis faltantes
-        int countParentesisAbiertos = linea.length() - linea.replace("(", "").length();
-        int countParentesisCerrados = linea.length() - linea.replace(")", "").length();
-
-        if (countParentesisAbiertos != countParentesisCerrados) {
-            salida.append("Error: Paréntesis no balanceados en la línea " + numeroLinea + "\n");
-            return false;
-        }
-
-        // Verificar si hay múltiples condicionales o ciclos en la misma línea, excluyendo if-else
-        if ((linea.contains("if") && linea.contains("else") && !linea.contains("?")) || linea.contains("for") || linea.contains("while")) {
-            salida.append("Error: Múltiples condicionales o ciclos en la línea " + numeroLinea + "\n");
-            return false;
-        }
-
-        // Verificar si hay dos o más bloques "if" en la misma línea
-        if (linea.split("if").length > 2) {
-            salida.append("Error: Múltiples bloques 'if' en la línea " + numeroLinea + "\n");
-            return false;
-        }
-
-        // Verificar llaves y corchetes balanceados
-        if (!verificarBalanceo(linea, '{', '}') || !verificarBalanceo(linea, '[', ']')) {
-            salida.append("Error: Llaves o corchetes no balanceados en la línea " + numeroLinea + "\n");
-            return false;
-        }
-
-        // Verificar comillas balanceadas
-        if (!verificarComillasBalanceadas(linea)) {
-            salida.append("Error: Problema con las comillas en la línea " + numeroLinea + "\n");
-            return false;
-        }
-
-        // Verificar comentarios bien formados
-        if (linea.contains("/*") && !linea.contains("*/")) {
-            salida.append("Error: Comentario mal formado en la línea " + numeroLinea + "\n");
-            return false;
-        }
-
-        // Verificar uso adecuado de operadores
-        if (linea.matches(".*[+*/-][+*/-].*")) {
-            salida.append("Error: Uso inadecuado de operadores en la línea " + numeroLinea + "\n");
-            return false;
-        }
-
-        // Verificar declaración de variables
-        if (linea.matches("\\s*\\w+\\s+=.*")) {
-            salida.append("Error: Declaración de variable mal formada en la línea " + numeroLinea + "\n");
-            return false;
-        }
-
-        // Agregar más lógica para verificar otros posibles errores de sintaxis según sea necesario
-        // ...
-
-        return true;
+    // Verificar si falta un punto y coma al final de la línea, excluyendo líneas que contienen solo llaves
+    if (!linea.trim().endsWith(";") && !linea.trim().endsWith("{") && !linea.trim().endsWith("}") && !linea.trim().endsWith(")")) {
+        salida.append("Error: Falta punto y coma al final de la línea " + numeroLinea + "\n");
+        return false;
+    }
+    
+        // Verificar si la línea anterior contiene una estructura de control y la línea actual no empieza con llave de cierre '}'.
+    if (linea.trim().startsWith("{") && linea.matches("\\s*(?!if|for|while|else).*")) {
+        salida.append("Error: Falta llave de cierre '}' antes de la línea " + numeroLinea + "\n");
+        return false;
     }
 
-    // Función para verificar el balanceo de llaves y corchetes
-    private boolean verificarBalanceo(String linea, char abrir, char cerrar) {
-        int countAbiertos = linea.length() - linea.replace(String.valueOf(abrir), "").length();
-        int countCerrados = linea.length() - linea.replace(String.valueOf(cerrar), "").length();
-        return countAbiertos == countCerrados;
+    // Verificar si hay paréntesis faltantes
+    int countParentesisAbiertos = linea.length() - linea.replace("(", "").length();
+    int countParentesisCerrados = linea.length() - linea.replace(")", "").length();
+
+    if (countParentesisAbiertos != countParentesisCerrados) {
+        salida.append("Error: Paréntesis no balanceados en la línea " + numeroLinea + "\n");
+        return false;
     }
+
+    // Verificar si hay múltiples condicionales o ciclos en la misma línea, excluyendo if-else
+    if ((linea.contains("if") && linea.contains("else") && !linea.contains("?")) || linea.contains("for") || linea.contains("while")) {
+        salida.append("Error: Múltiples condicionales o ciclos en la línea " + numeroLinea + "\n");
+        return false;
+    }
+
+    // Verificar si hay dos o más bloques "if" en la misma línea
+    if (linea.split("if").length > 2) {
+        salida.append("Error: Múltiples bloques 'if' en la línea " + numeroLinea + "\n");
+        return false;
+    }
+
+    // Verificar comillas balanceadas
+    if (!verificarComillasBalanceadas(linea)) {
+        salida.append("Error: Problema con las comillas en la línea " + numeroLinea + "\n");
+        return false;
+    }
+    
+    // Verificar comentarios bien formados
+    if (linea.contains("/*") && !linea.contains("*/")) {
+        salida.append("Error: Comentario mal formado en la línea " + numeroLinea + "\n");
+        return false;
+    }
+
+    // Verificar uso adecuado de operadores
+    if (linea.matches(".*[+*/-][+*/-].*")) {
+        salida.append("Error: Uso inadecuado de operadores en la línea " + numeroLinea + "\n");
+        return false;
+    }
+
+    // Verificar declaración de variables
+    if (linea.matches("\\s*\\w+\\s+=.*")) {
+        salida.append("Error: Declaración de variable mal formada en la línea " + numeroLinea + "\n");
+        return false;
+    }
+
+    // Agregar más lógica para verificar otros posibles errores de sintaxis según sea necesario
+    // ...
+
+    return true;
+}
+
+private boolean verificarBalanceoGlobal(List<String> lineas) {
+    int countLlavesAbiertas = 0;
+    int countLlavesCerradas = 0;
+
+    for (String linea : lineas) {
+        countLlavesAbiertas += linea.length() - linea.replace("{", "").length();
+        countLlavesCerradas += linea.length() - linea.replace("}", "").length();
+    }
+
+    if (countLlavesAbiertas != countLlavesCerradas) {
+        salida.append("Error: Llaves no balanceadas en el código\n");
+        return false;
+    }
+    return true;
+}
+
+public boolean verificarCodigo(List<String> lineas) {
+    boolean sintaxisCorrecta = true;
+
+    for (int i = 0; i < lineas.size(); i++) {
+        if (!verificarSintaxisLinea(lineas.get(i), i + 1)) {
+            sintaxisCorrecta = false;
+        }
+    }
+
+    if (!verificarBalanceoGlobal(lineas)) {
+        sintaxisCorrecta = false;
+    }
+
+    return sintaxisCorrecta;
+}
 
     // Función para verificar comillas balanceadas
     private boolean verificarComillasBalanceadas(String linea) {

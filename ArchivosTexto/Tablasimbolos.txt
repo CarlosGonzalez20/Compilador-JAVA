@@ -1,5 +1,15 @@
 Tabla de Símbolos:
 ID         Token                          Tipo/Clasificación  
 ---------- ------------------------------ ----------------------
-id2        int                            Palabra Clave       
-id3        resultado;                     Otro                
+id135      if                             Condicional         
+id136      (                              Simbolo             
+id137      a                              Identificador       
+id138      =                              Operador            
+id139      b                              Identificador       
+id140      )                              Simbolo             
+id141      {                              Simbolo             
+id142      ;                              Simbolo             
+id143      hola                           Identificador       
+id144      ;                              Simbolo             
+id145      }                              Simbolo             
+id146      ;                              Simbolo             
