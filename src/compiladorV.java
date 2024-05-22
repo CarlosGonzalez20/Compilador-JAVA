@@ -558,6 +558,8 @@ public boolean verificarCodigo(List<String> lineas) {
                     continue;
                 }
             }
+            
+            procesarLinea2(linea);
 
             // Tokenizar la línea en palabras
             StringTokenizer lineaTokenizer = new StringTokenizer(linea);
@@ -672,6 +674,36 @@ String texto = ingresoTexto.getText();
         }
     }
 
+    private void procesarLinea2(String linea) {
+    // Separar la línea por el signo "="
+    String[] parts = linea.split("=");
+
+    if (parts.length != 2) {
+        salida.append("Error: La sintaxis de la línea es incorrecta\n");
+        return;
+    }
+
+    // Eliminar espacios en blanco alrededor de los tokens y el signo "="
+    String tipoNombre = parts[0].trim();
+    String valor = parts[1].trim();
+
+    // Dividir el tipo y el nombre de la variable
+    String[] tipoNombreArray = tipoNombre.split("\\s+");
+    if (tipoNombreArray.length != 2) {
+        salida.append("Error: La sintaxis de la línea es incorrecta\n");
+        return;
+    }
+
+    String tipo = tipoNombreArray[0];
+    String nombreVariable = tipoNombreArray[1];
+
+    if (!esTipoValido(tipo, valor)) {
+        salida.append("Error: La variable '" + nombreVariable + "' de tipo '" + tipo + "' no corresponde con el valor asignado '" + valor + "'\n");
+    } else {
+        salida.append("Mensaje de aceptación: La variable '" + nombreVariable + "' de tipo '" + tipo + "' corresponde con el valor asignado '" + valor + "'\n");
+    }
+}
+    
 private void procesarLinea(String linea) {
     if (!linea.startsWith("TIPO")) {
         salida.append("Error: La línea no comienza con 'TIPO'\n");

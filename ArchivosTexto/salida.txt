@@ -1,10 +1,13 @@
-[Operador]: =
-[Simbolo]: ( ) { ;
-[Identificador]: a b hola
-[Condicional]: if
+Error: La sintaxis de la línea es incorrecta
+[Operador]: ==
+[Palabra Clave]: int
+[Número]: 0
+[Simbolo]: ;
+[Identificador]: a
 
 Resumen:
 Operador: 1
-Simbolo: 4
-Identificador: 3
-Condicional: 1
+Palabra Clave: 1
+Número: 1
+Simbolo: 1
+Identificador: 1
